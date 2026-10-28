@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App de Torneos</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">🏆 App de Torneos</h1>
+    <p class="text-gray-600 mb-8">Gestor de brackets estilo EVO/Start.gg</p>
+
+    <div id="torneos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="col-span-3 text-center py-8 text-gray-500">Cargando torneos...</div>
+    </div>
+
+    <div class="mt-8 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+      <h3 class="font-semibold text-indigo-900 mb-2">✅ Estado</h3>
+      <p class="text-indigo-700 text-sm">Supabase conectado</p>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://zoxtidipfavsjerswlbo.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_6h6iIwdKRCufAOnLzhuHbQ_x-xajNBM';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function cargarTorneos() {
+      const contenedor = document.getElementById('torneos');
+      try {
+        const { data, error } = await supabaseClient
+          .from('tournaments')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        contenedor.innerHTML = '';
+        if (!data || data.length === 0) {
+          contenedor.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-500">No hay torneos aún.</div>';
+          return;
+        }
+
+        data.forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'bg-white rounded-xl p-6 shadow border border-gray-200';
+          div.innerHTML = `
+            <h3 class="font-semibold text-gray-900 mb-2">${t.name}</h3>
+            <p class="text-sm text-gray-500 mb-4">${t.game}</p>
+            <a href="/t/${t.id}" class="text-indigo-600 hover:underline text-sm font-medium">Ver torneo →</a>
+          `;
+          contenedor.appendChild(div);
+        });
+      } catch (err) {
+        contenedor.innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Error: ' + err.message + '</div>';
+      }
+    }
+
+    cargarTorneos();
+  </script>
+</body>
+</html>
