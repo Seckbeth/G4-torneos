@@ -1,24 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="App de Torneos - Gestor de brackets estilo EVO/Challonge" />
-    <title>App de Torneos</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Supabase Client (CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Configuración Supabase -->
-    <script>
-      window.__SUPABASE_URL__ = 'https://zoxtidipfavsjerswlbo.supabase.co';
-      window.__SUPABASE_ANON_KEY__ = 'sb_publishable_6h6iIwdKRCufAOnLzhuHbQ_x-xajNBM';
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App de Torneos</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #root { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/javascript">
+    const { useState, useEffect, createElement: e } = React;
+    const { createClient } = supabase;
+
+    const SUPABASE_URL = 'https://zoxtidipfavsjerswlbo.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_6h6iIwdKRCufAOnLzhuHbQ_x-xajNBM';
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- Componente simple de inicio ---
+    function Home() {
+      const [tournaments, setTournaments] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        supabaseClient
+          .from('tournaments')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .then(({ data }) => {
+            setTournaments(data || []);
+            setLoading(false);
+          });
+      }, []);
+
+      return e('div', { className: 'min-h-screen bg-gray-50 p-8' },
+        e('h1', { className: 'text-3xl font-bold text-gray-900 mb-6' }, 'App de Torneos'),
+        e('p', { className: 'text-gray-600 mb-8' }, 'Gestor de brackets estilo EVO/Start.gg'),
+        loading ? e('p', {}, 'Cargando...') :
+        e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+          tournaments.map(t => e('div', { key: t.id, className: 'bg-white rounded-lg p-6 shadow border border-gray-200' },
+            e('h3', { className: 'font-semibold text-gray-900 mb-2' }, t.name),
+            e('p', { className: 'text-sm text-gray-500 mb-4' }, t.game),
+            e('a', {
+              href: `/t/${t.id}`,
+              className: 'text-indigo-600 hover:underline text-sm'
+            }, 'Ver torneo')
+          ))
+        )
+      );
+    }
+
+    // --- Componente de ver torneo ---
+    function TournamentView() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+
+      return e('div', { className: 'min-h-screen bg-gray-50 p-8' },
+        e('h1', { className: 'text-3xl font-bold text-gray-900 mb-6' }, 'Torneo #' + id),
+        e('p', { className: 'text-gray-600 mb-8' }, 'Bracket y gestión de partidas')
+      );
+    }
+
+    // --- Router simple ---
+    function App() {
+      const path = window.location.pathname;
+      if (path.startsWith('/t/')) {
+        return e(TournamentView);
+      }
+      return e(Home);
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(e(App));
+  </script>
+</body>
 </html>
